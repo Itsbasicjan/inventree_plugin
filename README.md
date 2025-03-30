@@ -23,3 +23,4 @@ pip install meinplugin
 ## Usage
 
 ... todo ...
+# inventree_plugin
