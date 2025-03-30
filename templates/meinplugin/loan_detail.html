@@ -1,0 +1,89 @@
+{% extends "panel_detail.html" %}
+{% load i18n %}
+{% load inventree_extras %}
+
+{% block title %}{% blocktrans %}Loan Details: {{ loan.pk }}{% endblocktrans %}{% endblock %}
+
+{% block panel_title %}{% blocktrans %}Loan #{{ loan.pk }} - {{ loan.customer.name }}{% endblocktrans %}{% endblock %}
+
+{% block panel_content %}
+<h4>{% trans "Loan Information" %}</h4>
+<dl class='dl-horizontal'>
+    <dt>{% trans "Customer" %}:</dt><dd>{{ loan.customer.name }}</dd>
+    <dt>{% trans "Loan Date" %}:</dt><dd>{{ loan.loan_date }}</dd>
+    <dt>{% trans "Due Date" %}:</dt><dd>{{ loan.due_date }}</dd>
+    <dt>{% trans "Status" %}:</dt><dd>{{ loan.get_status_display }} {% if loan.is_overdue %}<span class='label label-danger'>{% trans "Overdue" %}</span>{% endif %}</dd>
+    <dt>{% trans "Reference" %}:</dt><dd>{{ loan.reference|default:"-" }}</dd>
+    <dt>{% trans "Notes" %}:</dt><dd>{{ loan.notes|linebreaksbr|default:"-" }}</dd>
+    {% comment %} Add more fields as needed {% endcomment %}
+</dl>
+
+<hr>
+<h4>{% trans "Loaned Items" %}</h4>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>{% trans "Stock Item" %}</th>
+            <th>{% trans "Serial" %}</th>
+            <th>{% trans "Status" %}</th>
+            <th>{% trans "Actions" %}</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for item in loaned_items %}
+    <tr>
+        <td><a href='{{ item.stock_item.get_absolute_url }}'>{{ item.stock_item.part.full_name }}</a></td>
+        <td>{{ item.stock_item.serial|default:"N/A" }}</td>
+        <td>{{ item.get_status_display }}</td>
+        <td>
+            {% if item.status == item.ItemStatus.PENDING and loan.status == loan.LoanStatus.PENDING %}
+            <form method="post" style="display: inline;">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="issue_item">
+                <input type="hidden" name="item_pk" value="{{ item.pk }}">
+                <button type="submit" class="btn btn-success btn-sm">{% trans "Issue Item" %}</button>
+            </form>
+            {% endif %}
+            {% if item.status == item.ItemStatus.ON_LOAN %}
+             <form method="post" style="display: inline;">
+                 {% csrf_token %}
+                 <input type="hidden" name="action" value="return_item">
+                 <input type="hidden" name="item_pk" value="{{ item.pk }}">
+                 <select name="return_location" required class="form-control input-sm" style="max-width: 150px; display: inline-block;">
+                     <option value="">{% trans "Return Location..." %}</option>
+                     {% for loc in return_locations %}
+                     <option value="{{ loc.pk }}">{{ loc.pathstring }}</option>
+                     {% endfor %}
+                 </select>
+                 <button type="submit" class="btn btn-primary btn-sm">{% trans "Return Item" %}</button>
+             </form>
+            {% endif %}
+            {% comment %} Add button to remove pending item? {% endcomment %}
+        </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="4"><em>{% trans "No items added to this loan yet." %}</em></td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+{% if loan.status == loan.LoanStatus.PENDING %}
+<hr>
+<h4>{% trans "Add Item to Loan" %}</h4>
+{% comment %} Needs a proper StockItem selector here - maybe JS based? Basic example: {% endcomment %}
+<form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="add_item">
+    <div class="form-group">
+        <label for="stock_item_pk">{% trans "Stock Item PK or Serial" %}:</label>
+        <input type="text" name="stock_item_pk_lookup" class="form-control" placeholder="Enter PK or Serial">
+        {% comment %} Server-side needs to look up PK from serial if provided {% endcomment %}
+         <input type="hidden" name="stock_item_pk" id="stock_item_pk_hidden"> {# JS would populate this #}
+    </div>
+    <button type="submit" class="btn btn-info">{% trans "Add Item" %}</button>
+</form>
+{% endif %}
+
+
+{% endblock %}

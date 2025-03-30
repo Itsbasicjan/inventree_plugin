@@ -1,0 +1,25 @@
+{% extends "panel_form.html" %}
+{% load i18n %}
+
+{% block title %}{% if form.instance.pk %}{% trans "Edit Loan" %}{% else %}{% trans "Create New Loan" %}{% endif %}{% endblock %}
+
+{% block form_title %}{% if form.instance.pk %}{% trans "Edit Loan" %}{% else %}{% trans "Create New Loan" %}{% endif %}{% endblock %}
+
+{% block form_content %}
+    {% include "include/forms/form_horizontal.html" with form=form %}
+{% endblock %}
+
+{% block form_buttons %}
+    <button type='submit' class='btn btn-success'>
+        <span class='fas fa-save'></span> {% if form.instance.pk %}{% trans "Save Changes" %}{% else %}{% trans "Create Loan" %}{% endif %}
+    </button>
+    {% if form.instance.pk %}
+    <a href='{% url "plugin:loan:loan_detail" form.instance.pk %}' class='btn btn-default'>
+         <span class='fas fa-times'></span> {% trans "Cancel" %}
+     </a>
+    {% else %}
+     <a href='{% url "plugin:loan:loan_list" %}' class='btn btn-default'>
+         <span class='fas fa-times'></span> {% trans "Cancel" %}
+     </a>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends "panel_list.html" %} {% comment %} Or maybe "plugin_base.html" if available {% endcomment %}
+{% load i18n %}
+
+{% block title %}{% trans "Loan List" %}{% endblock %}
+
+{% block panel_title %}{% trans "All Loans" %}{% endblock %}
+
+{% block panel_content %}
+<table class="table table-striped table-condensed">
+    <thead>
+        <tr>
+            <th>{% trans "ID" %}</th>
+            <th>{% trans "Customer" %}</th>
+            <th>{% trans "Loan Date" %}</th>
+            <th>{% trans "Due Date" %}</th>
+            <th>{% trans "Status" %}</th>
+            <th>{% trans "Return Date" %}</th>
+            <th>{% trans "Actions" %}</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for loan in loans %}
+        <tr>
+            <td>{{ loan.pk }}</td>
+            <td><a href="{{ loan.customer.get_absolute_url }}">{{ loan.customer.name }}</a></td>
+            <td>{{ loan.loan_date|date:"Y-m-d H:i" }}</td>
+            <td {% if loan.is_overdue %}class="danger"{% endif %}>{{ loan.due_date }}</td>
+            <td>{{ loan.get_status_display }}</td>
+            <td>{{ loan.return_date|default:"-" }}</td>
+            <td>
+                <a href="{{ loan.get_absolute_url }}" class="btn btn-default btn-sm">
+                    <span class="fas fa-search"></span> {% trans "Details" %}
+                </a>
+                {% comment %} Add edit/delete buttons if needed {% endcomment %}
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="7"><em>{% trans "No loans found." %}</em></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% include "paginator.html" %}
+
+{% endblock %}
